@@ -1,122 +1,91 @@
-// 判断发布环境
-if (env.BRANCH_NAME == 'release') {
-    env.PRO_ENV = "pro"
-} else {
-    env.PRO_ENV = "test"
-}
 
-// 默认设置
-env.VERSION = '1.0.0'
-env.credentialsId = ''
-env.host = ''
-env.registryName = ''
-def imageName = ''
-def input_result // 用户输入项
+// 阿里云私服地址
+def docker_host = "registry.cn-hangzhou.aliyuncs.com"
 
+def dockerRegistryName="${docker_host}/wuzhixuan"
+// spring 配置文件
+def SPRING_PROFILE = "local"
+node{
+    stage('拉取代码') {
+        echo "1.git仓库下载代码"
+        checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'github-auth', url: 'https://github.com/wuzhixaun/test_pull_image.git']]])
+    }
+        
 
-try {
-    stage('config') {
-        echo "Branch: ${env.BRANCH_NAME}, Environment: ${env.PRO_ENV}"
+    stage('解析pom文件') {
+        echo "2.解析pom文件"
+        // 读取pom文件
+        pom = readMavenPom file: 'pom.xml'
+        // 镜像名称
+        docker_img_name = "${pom.groupId}-${pom.artifactId}"
+        echo "group: ${pom.groupId}, artifactId: ${pom.artifactId}, version: ${pom.version}"
+        
+        echo "docker-img-name: ${docker_img_name}"
+        script {
+            build_tag = sh(returnStdout: true, script: 'git rev-parse --short HEAD').trim()
+            if (env.BRANCH_NAME != 'master' && env.BRANCH_NAME != null) {
+                build_tag = "${env.BRANCH_NAME}-${build_tag}"
+            }
+        }
+        echo "build_tag:${build_tag}"
+    }
 
-        input_result = input message: 'Check Tasks', ok: 'ok', parameters: [
-            booleanParam(name: 'install', defaultValue: false),
-            booleanParam(name: 'test', defaultValue: true),
-            booleanParam(name: 'deploy', defaultValue: true)
-        ]
+    stage('预编译') {
+        echo "4.预编译"
+        sh "mvn test"
     }
     
-    stage('Checkout'){
-        // 重置本地修改项
-        try {
-            sh 'git checkout .'
-        } catch (err) {
+    stage('删除/构建镜像') {
+        echo "5.编译+ 删除本地镜像 + 构建当前镜像"
+        sh "mvn package  -Dmaven.test.skip=true"
+       
+        // 删除本地镜像
+        sh "docker rmi -f ${docker_img_name}:${build_tag}"
+        sh "docker rmi -f ${dockerRegistryName}/${docker_img_name}:${build_tag}"
+        sh "docker rmi -f ${dockerRegistryName}/${docker_img_name}:latest"
+        sh "docker rmi -f ${dockerRegistryName}/${docker_img_name}:${pom.version}"
+        // 构建当前镜像
+        sh "docker build -t ${docker_img_name}:${build_tag} " +
+                " --build-arg ${SPRING_PROFILE} " +
+                " --build-arg JAR_FILE=target/${pom.artifactId}-${pom.version}.jar " +
+                " ."
+    }
 
-        }
+    stage('推送镜像到阿里云私服') {
+        echo "6.推送镜像到阿里云私服"
         
-        checkout scm
-
-        // 读取配置信息
-        if(fileExists('config.json')) {
-            def str = readFile 'config.json'
-            def jsonSlurper = new JsonSlurper()
-            def obj = jsonSlurper.parseText(str)
-
-            env.registryName = obj.registryName
-            def envConifg = obj.env[env.PRO_ENV]
-            
-            echo "envConifg: ${envConifg}"
-
-            env.VERSION = obj.version
-            env.credentialsId = envConifg.credentialsId
-            env.host = envConifg.host
-
-            imageName = "${env.registryName}:${env.VERSION}_${env.PRO_ENV}_${BUILD_NUMBER}"
-
-            echo "VERSION: ${env.VERSION} ${imageName}"
-        }
+        // 将镜像打上tag
+        sh "docker tag ${docker_img_name}:${build_tag} ${dockerRegistryName}/${docker_img_name}:latest"
+        sh "docker tag ${docker_img_name}:${build_tag} ${dockerRegistryName}/${docker_img_name}:${pom.version}"
         
-        sh 'ls'
-    }
-
-    stage('Install'){
-        if(input_result.install) {
-            docker.image('node:9.6.0').inside {
-                sh 'node -v'
-                sh 'sh ./scripts/install.sh'
-            }
+        // 登录并且push阿里云镜像私服
+        withCredentials([usernamePassword(credentialsId: 'docker-register', passwordVariable: 'dockerPassword', usernameVariable: 'dockerUser')]) {
+            sh "docker login -u ${dockerUser} -p ${dockerPassword} ${docker_host}"
+            sh "docker push ${dockerRegistryName}/${docker_img_name}:latest"
+            sh "docker push ${dockerRegistryName}/${docker_img_name}:${pom.version}"
+            sh "docker push ${dockerRegistryName}/${docker_img_name}:${build_tag}"
         }
     }
 
-    stage('Test'){
-        if(input_result.test) {
-            docker.image('node:9.6.0').inside {
-                sh 'sh ./scripts/test.sh'
-            }
-        }
-    }
+    stash 'complete-build'
 
-    stage('Build Docker'){
-        // 构建上传镜像到容器仓库
-        if(input_result.deploy) {
-            def customImage = docker.build(imageName, "--build-arg PRO_ENV=${env.PRO_ENV} .")
+}
 
-            docker.withRegistry("https://${env.registryName}", 'docker-demo') {
-                /* Push the container to the custom Registry */
-                customImage.push()
-            }
-        }
-    }
 
-    stage('Deploy'){
-        if(input_result.deploy) {
-            // wechat服务器
-            withCredentials([usernamePassword(credentialsId: env.credentialsId, usernameVariable: 'USER', passwordVariable: 'PWD')]) {
-                def otherArgs = '-p 8001:8001' // 区分不同环境的启动参数
-                def remote = [:]
-                remote.name = 'ssh-deploy'
-                remote.allowAnyHosts = true
-                remote.host = env.host
-                remote.user = USER
-                remote.password = PWD
-            
-                if(env.PRO_ENV == "pro") {
-                    otherArgs = '-p 3000:3000'
-                }
-
-                try {
-                    sshCommand remote: remote, command: "docker rm -f demo"
-                } catch (err) {
-
-                }
-                sshCommand remote: remote, command: "docker run -d --name demo -v /etc/localtime:/etc/localtime -e PRO_ENV='${env.PRO_ENV}' ${otherArgs} ${imageName}"
-            }
-
-            // 删除旧的镜像
-            sh "docker rmi -f ${imageName.replaceAll("_${BUILD_NUMBER}", "_${BUILD_NUMBER - 1}")}"
-        }
+if (env.BRANCH_NAME == 'master' || env.BRANCH_NAME == null) {
+    timeout(time: 10, unit: 'MINUTES') {
+        input '确认要部署线上环境吗？'
     }
 }
-catch (err) {
-    currentBuild.result = "FAILURE"
-    throw err
+ 
+ 
+node{
+    stage('Deploy') {
+        //unstash 'complete-build'
+        echo "5. Deploy Stage"
+ 
+        sh "sed -i 's/<IMG_NAME>/${img_name}:${build_tag}/' location/k8s.yaml"
+        sh "sed -i 's/<BRANCH_NAME>/${env.BRANCH_NAME}/' location/k8s.yaml"
+        sh "/data/opt/kubernetes/client/bin/kubectl apply -f ${WORKSPACE}/location/k8s.yaml --record"
+    }
 }
