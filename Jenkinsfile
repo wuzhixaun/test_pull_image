@@ -11,9 +11,6 @@ pipeline {
         stage('编译构建') { steps {
             sh label: '', script: 'mvn clean package'
          }
-         stage('推送镜像') { steps {
-             echo '推送镜像到阿里云'
-         }
 }
 
 
