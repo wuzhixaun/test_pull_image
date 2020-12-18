@@ -49,11 +49,9 @@ serif">
             <ul>
                 <li>历史变更记录 : <a href="${PROJECT_URL}changes">${PROJECT_URL}changes</a></li>
             </ul>
-            ${CHANGES_SINCE_LAST_SUCCESS,reverse=true, format="Changes for
-            Build #%n:<br/>%c<br/>",showPaths=true,changesFormat="
-            <pre>[%a]<br
-            />%m</pre>
-            ",pathFormat="&nbsp;&nbsp;&nbsp;&nbsp;%p"}
+<!--            ${CHANGES_SINCE_LAST_SUCCESS,reverse=true, format="Changes for Build #%n:<br/>%c<br/>",showPaths=true,changesFormat="-->
+<!--            <pre>[%a]<br/>%m</pre>",pathFormat="&nbsp;&nbsp;&nbsp;&nbsp;%p"}p-->
+            ${CHANGES_SINCE_LAST_SUCCESS, reverse=true, format="%c", changesFormat="<li>%d [%a] %m</li>"}
         </td>
     </tr>
     <tr>
