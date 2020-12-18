@@ -49,9 +49,8 @@ serif">
             <ul>
                 <li>历史变更记录 : <a href="${PROJECT_URL}changes">${PROJECT_URL}changes</a></li>
             </ul>
-<!--            ${CHANGES_SINCE_LAST_SUCCESS,reverse=true, format="Changes for Build #%n:<br/>%c<br/>",showPaths=true,changesFormat="-->
-<!--            <pre>[%a]<br/>%m</pre>",pathFormat="&nbsp;&nbsp;&nbsp;&nbsp;%p"}p-->
-            ${CHANGES_SINCE_LAST_SUCCESS, reverse=true, format="%c", changesFormat="<li>%d [%a] %m</li>"}
+            ${CHANGES_SINCE_LAST_SUCCESS,reverse=true, format="Changes for Build #%n:<br />%c<br />",showPaths=true,changesFormat="<pre>[%a]<br />%m</pre>",pathFormat="&nbsp;&nbsp;&nbsp;&nbsp;%p"}
+<!--            ${CHANGES_SINCE_LAST_SUCCESS, reverse=true, format="%c", changesFormat="<li>%d [%a] %m</li>"}-->
         </td>
     </tr>
     <tr>
@@ -72,8 +71,7 @@ sans-serif">$FAILED_TESTS</pre>
     </tr>
     <tr>
         <td><textarea cols="80" rows="30" readonly="readonly"
-                      style="font-family: Courier New">${BUILD_LOG,
-maxLines=100}</textarea>
+                      style="font-family: Courier New">${BUILD_LOG, maxLines=100}</textarea>
         </td>
     </tr>
 </table>
