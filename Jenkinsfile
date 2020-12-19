@@ -63,29 +63,18 @@ node{
             sh "docker login -u ${dockerUser} -p ${dockerPassword} ${docker_host}"
             sh "docker push ${dockerRegistryName}/${docker_img_name}:latest"
             sh "docker push ${dockerRegistryName}/${docker_img_name}:${pom.version}"
-            sh "docker push ${dockerRegistryName}/${docker_img_name}:${build_tag}"
         }
     }
 
-    stash 'complete-build'
-
-}
-
-
-if (env.BRANCH_NAME == 'master' || env.BRANCH_NAME == null) {
-    timeout(time: 10, unit: 'MINUTES') {
-        input '确认要部署线上环境吗？'
+    stage('发送邮件') {
+        echo "7.推送镜像到阿里云私服"
+        emailext(
+                subject: '构建通知:${PROJECT_NAME} - Build # ${BUILD_NUMBER} - ${BUILD_STATUS}!',
+                body: '${FILE,path="email.html"}',
+                to: '627521884@qq.com'
+             )
+        
     }
+
 }
- 
- 
-node{
-    stage('Deploy') {
-        //unstash 'complete-build'
-        echo "5. Deploy Stage"
- 
-        sh "sed -i 's/<IMG_NAME>/${img_name}:${build_tag}/' location/k8s.yaml"
-        sh "sed -i 's/<BRANCH_NAME>/${env.BRANCH_NAME}/' location/k8s.yaml"
-        sh "/data/opt/kubernetes/client/bin/kubectl apply -f ${WORKSPACE}/location/k8s.yaml --record"
-    }
-}
+
