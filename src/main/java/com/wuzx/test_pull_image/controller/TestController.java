@@ -9,12 +9,12 @@ public class TestController {
 
     @GetMapping("/hello")
     public String getHello() {
-        return "猪猪猪臭猪王3"; 
+        return "hello my world"; 
     }
 
     @GetMapping("/java")
     public String getJava() {
-        return "java";
+        return "java1";
     }
 
     @GetMapping("/go")
@@ -24,7 +24,7 @@ public class TestController {
 
     @GetMapping("/python")
     public String getPython() {
-        return "python";
+        return "python1";
     }
         
 }
