@@ -19,7 +19,7 @@ public class TestController {
 
     @GetMapping("/go")
     public String getGo() {
-        return "go";
+        return "go1";
     }
         
 }
