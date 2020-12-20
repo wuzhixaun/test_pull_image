@@ -9,7 +9,12 @@ public class TestController {
 
     @GetMapping("/hello")
     public String getHello() {
-        return "hello3"; 
+        return "猪猪猪猪租啊啊啊啊"; 
+    }
+
+    @GetMapping("/java")
+    public String getJava() {
+        return "java";
     }
         
 }
