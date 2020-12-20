@@ -21,5 +21,10 @@ public class TestController {
     public String getGo() {
         return "go1";
     }
+
+    @GetMapping("/python")
+    public String getPython() {
+        return "python";
+    }
         
 }
