@@ -15,9 +15,6 @@ podTemplate(label: label, containers: [
 
     stage('单元测试') {
       echo "测试阶段"
-      echo myRepo
-      echo gitCommit
-      echo gitBranch
     }
     stage('代码编译打包') {
       container('jdk-maven') {
