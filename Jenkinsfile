@@ -10,13 +10,14 @@ podTemplate(label: label, containers: [
 ]) {
   node(label) {
 
-    stage('单元测试') {
+    stage('代码克隆') {
       echo "测试阶段"
+      sh "ls"
     }
     stage('代码编译打包') {
       container('jdk-maven') {
         echo "代码编译打包阶段"
-        
+        sh "mvn clean compile"
       }
     }
     stage('构建 Docker 镜像') {
