@@ -9,9 +9,6 @@ podTemplate(label: label, containers: [
   hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
 ]) {
   node(label) {
-    def myRepo = checkout master
-    def gitCommit = myRepo.GIT_COMMIT
-    def gitBranch = myRepo.GIT_BRANCH
 
     stage('单元测试') {
       echo "测试阶段"
