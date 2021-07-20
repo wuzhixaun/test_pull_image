@@ -16,8 +16,7 @@ podTemplate(label: label, containers: [
     stage('代码编译打包') {
       container('jdk-maven') {
         echo "代码编译打包阶段"
-        sh "mvn -v"
-        sh "java -version"
+        
       }
     }
     stage('构建 Docker 镜像') {
