@@ -4,14 +4,14 @@ podTemplate(label: label, containers: [
   containerTemplate(name: 'golang', image: 'golang:1.14.2-alpine3.11', command: 'cat', ttyEnabled: true),
   containerTemplate(name: 'docker', image: 'docker:latest', command: 'cat', ttyEnabled: true),
   containerTemplate(name: 'kubectl', image: 'cnych/kubectl', command: 'cat', ttyEnabled: true)
-], serviceAccount: 'jenkins', volumes: [
+], serviceAccount: 'jenkins-admin', volumes: [
   hostPathVolume(mountPath: '/home/jenkins/.kube', hostPath: '/root/.kube'),
   hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
 ]) {
   node(label) {
-    def myRepo = checkout scm
-    def gitCommit = myRepo.GIT_COMMIT
-    def gitBranch = myRepo.GIT_BRANCH
+//     def myRepo = checkout scm
+//     def gitCommit = myRepo.GIT_COMMIT
+//     def gitBranch = myRepo.GIT_BRANCH
 
     stage('单元测试') {
       echo "测试阶段"
