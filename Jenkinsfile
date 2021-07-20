@@ -1,7 +1,7 @@
 def label = "slave-${UUID.randomUUID().toString()}"
 
 podTemplate(label: label, containers: [
-  containerTemplate(name: 'golang', image: 'golang:1.14.2-alpine3.11', command: 'cat', ttyEnabled: true),
+  containerTemplate(name: 'jdk-maven', image: 'appinair/jdk11-maven', command: 'cat', ttyEnabled: true),
   containerTemplate(name: 'docker', image: 'docker:latest', command: 'cat', ttyEnabled: true),
   containerTemplate(name: 'kubectl', image: 'cnych/kubectl', command: 'cat', ttyEnabled: true)
 ], serviceAccount: 'jenkins-admin', volumes: [
@@ -9,7 +9,7 @@ podTemplate(label: label, containers: [
   hostPathVolume(mountPath: '/var/run/docker.sock', hostPath: '/var/run/docker.sock')
 ]) {
   node(label) {
-//     def myRepo = checkout scm
+//     def myRepo = checkout master
 //     def gitCommit = myRepo.GIT_COMMIT
 //     def gitBranch = myRepo.GIT_BRANCH
 
@@ -17,8 +17,10 @@ podTemplate(label: label, containers: [
       echo "测试阶段"
     }
     stage('代码编译打包') {
-      container('golang') {
+      container('jdk-maven') {
         echo "代码编译打包阶段"
+        sh "mvn -v"
+        sh "jdk -v"
       }
     }
     stage('构建 Docker 镜像') {
