@@ -37,8 +37,8 @@ podTemplate(label: label, containers: [
           container('docker') {
             echo "3. 构建 Docker 镜像阶段"
             sh """
-              docker login ${registryUrl} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
               docker build -t ${image} .
+              docker login ${registryUrl} -u ${DOCKER_USER} -p ${DOCKER_PASSWORD}
               docker push ${image}
               """
           }
