@@ -1,6 +1,5 @@
 def label = "slave-${UUID.randomUUID().toString()}"
 
-
 podTemplate(label: label, containers: [
   containerTemplate(name: 'jdk-maven', image: 'appinair/jdk11-maven:latest', command: 'cat', ttyEnabled: true),
   containerTemplate(name: 'docker', image: 'docker:latest', command: 'cat', ttyEnabled: true),
@@ -22,11 +21,8 @@ podTemplate(label: label, containers: [
     // 镜像
     def image = "${registryUrl}/${imageEndpoint}:${imageTag}"
     
-    stage('测试') {
-      container('jdk-maven') {
-        echo "测试"
-        sh "mvn test"
-      }
+    stage('单元测试') {
+      echo "测试阶段"
     }
     
     stage('代码编译打包') {
