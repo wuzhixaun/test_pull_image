@@ -1,11 +1,5 @@
 def label = "slave-${UUID.randomUUID().toString()}"
-// 获取 git commit id 作为镜像标签
-def imageTag = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
-// 仓库地址
-def registryUrl = "registry-vpc.cn-shenzhen.aliyuncs.com"
-def imageEndpoint = "wuzhixuan/devops-demo"
-// 镜像
-def image = "${registryUrl}/${imageEndpoint}:${imageTag}"
+
 
 podTemplate(label: label, containers: [
   containerTemplate(name: 'jdk-maven', image: 'appinair/jdk11-maven:latest', command: 'cat', ttyEnabled: true),
@@ -20,20 +14,30 @@ podTemplate(label: label, containers: [
     def gitCommit = repo.GIT_COMMIT
     def gitBranch = repo.GIT_BRANCH
     
+    // 获取 git commit id 作为镜像标签
+    def imageTag = sh(script: "git rev-parse --short HEAD", returnStdout: true).trim()
+    // 仓库地址
+    def registryUrl = "registry-vpc.cn-shenzhen.aliyuncs.com"
+    def imageEndpoint = "wuzhixuan/devops-demo"
+    // 镜像
+    def image = "${registryUrl}/${imageEndpoint}:${imageTag}"
+    
     stage('测试') {
       container('jdk-maven') {
         echo "测试"
         sh "mvn test"
       }
     }
+    
     stage('代码编译打包') {
       container('jdk-maven') {
         echo "代码编译打包阶段"
         sh "mvn clean compile"
       }
     }
+    
     stage('构建 Docker 镜像') {
-      withCredentials([usernamePassword(credentialsId: 'dock-auth-ali', passwordVariable: 'password', usernameVariable: 'username')]) {
+      withCredentials([usernamePassword(credentialsId: 'dock-auth-ali', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USER')]) {
           container('docker') {
             echo "3. 构建 Docker 镜像阶段"
             sh """
@@ -43,8 +47,8 @@ podTemplate(label: label, containers: [
               """
           }
       }
-     
     }
+    
     stage('运行 Kubectl') {
       container('kubectl') {
         echo "查看 K8S 集群 Pod 列表"
