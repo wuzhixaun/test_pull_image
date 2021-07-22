@@ -28,7 +28,7 @@ podTemplate(label: label, containers: [
     stage('代码编译打包') {
       container('jdk-maven') {
         echo "代码编译打包阶段"
-        sh "mvn clean package"
+        sh "mvn clean package -Dmaven.test.skip=true"
       }
     }
     
@@ -52,7 +52,7 @@ podTemplate(label: label, containers: [
           """
           sed -i 's#\$image#${image}#' deployment.yaml
           """
-        step([$class: 'KubernetesDeploy', authMethod: 'certs', apiServerUrl: 'https://kubernetes.default.svc.cluster.local:443', credentialsId:'kubeconfig', config: 'deployment.yaml',variableState: 'registryUrl,imageEndpoint,imageTag'])
+        kubernetesDeploy(enableConfigSubstitution: false, kubeconfigId: 'kubeconfig1', configs: 'deployment.yaml')
       }
     }
   }
