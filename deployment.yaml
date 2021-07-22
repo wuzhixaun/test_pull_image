@@ -29,20 +29,6 @@ spec:
     - port: 80
       targetPort: 8080
       name: jenkins-java-demo
-  selector:
-    app: jenkins-java-demo
-  type: ClusterIP
-
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: jenkins-java-demo
-spec:
-  ports:
-    - port: 80
-      targetPort: 8080
-      name: jenkins-java-demo
       nodePort: 30003
   selector:
     app: jenkins-java-demo

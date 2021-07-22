@@ -48,8 +48,7 @@ podTemplate(label: label, containers: [
     stage('运行 Kubectl') {
       container('kubectl') {
         echo "查看 K8S 集群 Pod 列表"
-        sh 
-          """
+        sh """
           sed -i 's#\$image#${image}#' deployment.yaml
           """
         kubernetesDeploy(enableConfigSubstitution: false, kubeconfigId: 'kubeconfig1', configs: 'deployment.yaml')
