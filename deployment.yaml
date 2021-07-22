@@ -43,6 +43,7 @@ spec:
     - port: 80
       targetPort: 8080
       name: jenkins-java-demo
+      nodePort: 30003
   selector:
     app: jenkins-java-demo
-  type: ClusterIP
+  type: NodePort
