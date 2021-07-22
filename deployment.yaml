@@ -29,7 +29,7 @@ spec:
     - port: 80
       targetPort: 8080
       name: jenkins-java-demo
-      nodePort: 30003
+      nodePort: 30005
   selector:
     app: jenkins-java-demo
   type: NodePort
