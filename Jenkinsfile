@@ -48,6 +48,10 @@ podTemplate(label: label, containers: [
     stage('运行 Kubectl') {
       container('kubectl') {
         echo "查看 K8S 集群 Pod 列表"
+        sh 
+          """
+          sed -i 's#\$image#${image}#' deployment.yaml
+          """
         step([$class: 'KubernetesDeploy', authMethod: 'certs', apiServerUrl: 'https://kubernetes.default.svc.cluster.local:443', credentialsId:'kubeconfig', config: 'deployment.yaml',variableState: 'registryUrl,imageEndpoint,imageTag'])
       }
     }
